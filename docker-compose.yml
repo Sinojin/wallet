@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - 6378:6379
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - ./redis/data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+
+  redisinsight:
+    image: redislabs/redisinsight
+    restart: always
+    ports:
+      - 8011:8001
+    volumes:
+      - ./redisinsight:/db
+    depends_on: 
+      - redis
+
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: docker
+      MYSQL_ROOT_PASSWORD: local_root_password
+      MYSQL_DATABASE: db
+    ports:
+      - 3307:3306
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/conf.d:/etc/mysql/conf.d
+
+  adminer:
+    image: adminer:latest
+    restart: always
+    environment:
+      # choose your favorite design from https://www.adminer.org/
+      ADMINER_DESIGN: lucas-sandery
+    ports:
+      - 8090:8080
+    depends_on:
+      - mysql
